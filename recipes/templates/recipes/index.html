@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %} Recipe Index {% endblock %}
+
+{% block contents %}
+<h1 style="text-align:center;">Recipe Index</h1>
+
+
+{% if recipe_list|length < 7 %}
+<div style="width:27%;margin:auto;">
+{% else %}    
+<div class="selectlist">
+{% endif %}
+
+{% regroup recipe_list by first_letter as first_letter_list %}
+  <ul style="list-style:inside none;margin-left:2em;padding-left:0px;">
+
+    {% for letter in first_letter_list %}
+    <li> <h3>{{ letter.grouper }}</h3>
+    <ul style="list-style-type:none;margin-left:-2em;padding-left:0px;">
+      {% for recipe in letter.list %}
+      <li> <a href="/recipes/{{recipe.slug}}/">{{ recipe }}</a></li>
+      {% endfor %}
+    </ul>
+    </li>
+    {% endfor %}
+
+  </ul>    
+</div>    
+{% endblock contents %}

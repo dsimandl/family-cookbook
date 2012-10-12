@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ object.name }}{% endblock %}
+
+{% block contents %}
+    <div style="width:600px;
+		margin-left:auto;
+		margin-right:auto;
+		overflow:auto;
+		margin-bottom:3ex;">
+      <h1>{{ object.name }}</h1>
+      <div style="width:30%;float:left;">
+	<h3>Ingredients:</h3>
+	<ul style="padding:0px;margin:0px;list-style-position:inside;">
+	  {% for ingredient in object.recipeingredient_set.all %}
+	  <li> {{ ingredient }} </li>
+	  {% endfor %}
+	</ul>
+      </div>
+      <div style="width:65%;float:right;">
+	<h3>Directions:</h3>
+	<ol style="padding:0px;margin:0px">
+	  {% for instruction in object.instructionstep_set.all %}
+	  <li> {{ instruction }}</li>
+	  {% endfor %}
+	</ol>
+	<ul>
+	  {% with nut_info=object.nutrition %}
+	  <li>Calories: {{ nut_info.calories }}</li>
+	  <li>Carbohydrate: {{ nut_info.carbohydrate }} </li>
+	  <li>Protein: {{ nut_info.protein }} </li>
+	  <li>Fat: {{ nut_info.fat }} </li>
+	  <li>Errors: {{ nut_info.errors|linebreaks }}</li>
+	  {% endwith %}
+	<ul>
+      </div>
+    </div>
+{% endblock contents %}

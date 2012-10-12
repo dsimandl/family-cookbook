@@ -1,0 +1,85 @@
+from django.http import HttpResponse, QueryDict, HttpResponseRedirect
+from django.views.generic import DetailView, ListView, View
+from django.shortcuts import get_object_or_404
+from django.db.models import Q
+from django.core import serializers
+from django.contrib.auth.models import User
+from django.contrib.auth import authenticate,login, logout
+from models import Recipe
+
+def home(request):
+    respString = r"<html><head><title>Merry Christmas!</title></head>"
+    respString += r"<body>Dear Jenny,<p>I love you.  I want to make your life easier.  I present to you this custom-made, fully-configurable, always-on cookbook in the cloud.  This present includes all the technical support that you could ever need.  I also promise to type in lots of our favorite recipes, and to make the site look prettier and work better over time.</p><p>Love,<br />Mark</p>"
+    respString += "<ul><li>To add or edit recipes, <a href='/admin/'>click here</a></li><li>Contents: <a href='/recipes/contents/'>click here</a> </li><li>Index: <a href='/recipes/'>click here</a></li><li>Search: <a href='/recipes/search/'>click here</a></li></ul></body></html>"
+    return HttpResponse(respString)
+
+# def login(request):
+#     try:
+#         uname = request.POST.get('username')
+#         pwd = request.POST.get('pwd')
+#         user = authenticate(username=uname,password=pwd)
+#         if user is not None:
+#             login(request,user)
+#             return HttpResponseRedirect("/dev/recipes/contents/")
+#         else:
+#             return HttpResponseRedirect("/dev/recipes/index/")
+#     except Exception:
+#         return HttpResponseRedirect("/dev/recipes/user/rothljen/")
+
+# def logout(request):
+#     logout(request)
+#     return HttpResponseRedirect("/dev/recipes/contents/")
+
+def recipeList(request):
+    response = HttpResponse()
+    serializers.serialize('json',Recipe.objects.all(),stream=response)
+    return response
+
+def search(request):
+    respString = r"<html><head><title>Search</title></head><body><h1>In progress</h1></body></html>"
+    return HttpResponse(respString)
+
+class DishListView(ListView):
+    
+    template_name='recipes/contents.html'
+
+    def get_queryset(self):
+        return Recipe.objects.filter(dish__iexact=self.kwargs['dish_type']).order_by('name')
+
+class RecipeListView(ListView):
+    def get_queryset(self):
+        if self.kwargs.get('username','') == '':
+            return self.queryset
+        else:
+            return User.objects.get(username=self.kwargs['username']).get_profile().fav_recipes.order_by('dish','name')
+
+    def get_context_data(self,**kwargs):
+        context = super(RecipeListView, self).get_context_data(**kwargs)
+        if self.kwargs.get('username','') != '':
+            context['fav_user'] = User.objects.get(username=self.kwargs['username'])
+        return context
+
+class SearchListView(RecipeListView):
+    template_name='recipes/index.html'
+
+    def get_queryset(self):
+        return Recipe.objects.filter(Q(recipeingredient__ingredient__name__icontains=self.request.GET['term']) | Q(name__icontains=self.request.GET['term'])).distinct().order_by('name')
+
+
+class RecipeDetailView(DetailView):
+
+    queryset = Recipe.objects.all()
+    template_name = 'recipes/detail_dev.html'
+
+class FavView(View):
+
+    def get(self):
+        resp = HttpResponse()
+        resp.write(str(self.kwargs))
+        return resp
+
+    def post(self):
+        resp = HttpResponse()
+        resp.write(str(self.args))
+        return resp
+

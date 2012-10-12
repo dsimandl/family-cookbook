@@ -1,0 +1,67 @@
+{% extends "base_bs.html" %}
+
+{% block container %}
+{% regroup recipe_list by get_dish_display as contents_list %}
+<div class="row">
+  <div class="span4 offset4">
+    <h1 style="padding-top:60px;margin-top:-60px" id="top">
+      {% if fav_user %} 
+        {% if fav_user == user %} 
+        My 
+        {% else %}
+          {% if fav_user.first_name %}
+          {{fav_user.first_name}}'s
+          {% else %}
+          {{ fav_user.username}}'s
+          {% endif %}
+        {% endif %}
+        Favorites
+      {% else %}
+      Good Food
+      {% endif %}
+    </h1>
+  </div>
+</div>
+<div class="row">
+  <div class="span2 offset2" id="letters_div" style="min-height:1px;">
+    <ul class="nav nav-stacked nav-pills" id="dishnav" data-spy="affix" data-offset-top="100px">
+      {% for dish in contents_list %}
+      <li><a href="#{{dish.grouper|slugify}}-contents"><strong>{{ dish.grouper }}</strong></a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="span4" id="contents_div">
+    <ul class="unstyled" style="line-height:2">
+      {% for dish in contents_list %}
+      <li id="{{dish.grouper|slugify}}-contents" style="padding-top:40px;margin-top:-40px;"> 
+	<h4>
+	    <div class="pull-right">
+	      <a href="#top">
+		<i class="icon-arrow-up"></i>
+	      </a>
+	    </div>
+	  {{ dish.grouper }}
+	</h4>
+	<ul>
+	  {% for recipe in dish.list %}
+	  <li><a href="{% url recipe_detail recipe.slug %}">{{recipe}}</a></li>
+	  {% endfor %}
+	</ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock container %}
+
+{% block custom_script %}
+<script>
+  $(document).ready(function() {
+  $("body").attr("data-spy","scroll").attr("data-target","#letters_div");
+  $("#contents_div").on("click",".btn", function() {
+  $(this).button('toggle');
+  });
+  });
+</script>
+{% endblock custom_script %}
+

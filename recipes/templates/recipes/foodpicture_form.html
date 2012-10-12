@@ -1,0 +1,14 @@
+{% extends "base_bs.html" %}
+
+{% block container %}
+<div class="row">
+<div class="span4 offset4">
+<h2>Picture for {{ object.name }}</h2>
+<form method="POST">
+{% csrf_token %}
+{{ form.as_p }}
+<p><input type="submit" value="Submit"></p>
+</form>
+</span>
+</div>
+{% endblock container %}

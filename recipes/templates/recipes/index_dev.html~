@@ -1,0 +1,58 @@
+{% extends "base_bs.html" %}
+
+{% block container %}
+{% regroup recipe_list by first_letter as index_list %}
+<div class="row">
+  <div class="span4 offset4">
+    <h1 style="padding-top:60px;margin-top:-60px" id="top">
+      Index
+    </h1>
+  </div>
+</div>
+<div class="row">
+  <div class="span2 offset2" id="letters_div" style="min-height:1px;"> 
+    <div data-spy="affix" data-offset-top="200px">
+      <div class="well" style="text-align:center">
+	{% for letter in index_list %}
+	<span style="width:1em;display:inline-block;"><a href="#idx-{{letter.grouper}}"><strong>{{letter.grouper}}</strong></a></span> 
+	{% if forloop.counter|divisibleby:"5" %}
+	<br />
+	{% endif %}
+	{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="span4" id="contents_div">
+    <div class="row">
+      <ul class="unstyled" style="line-height:2">
+	{% for letter in index_list %}
+	<li id="idx-{{letter.grouper}}" style="padding-top:40px;margin-top:-40px;"> 
+	  <h4>
+	    <div class="pull-right">
+	      <a href="#top">
+		<i class="icon-arrow-up"></i>
+	      </a>
+	    </div>
+	    {{letter.grouper}}
+	    {% comment %}
+	    <button class="btn btn-small" data-toggle="collapse" data-target="#{{dish.grouper|slugify}}-contents"><i class="icon-chevron-down"></i></button> {{ dish.grouper }}
+	    {% endcomment %}
+	  </h4>
+	</li>
+	<div>
+	  <ul>
+	    {% for recipe in letter.list %}
+	    <li><a href="{% url recipe_detail recipe.slug %}">{{recipe}}</a></li>
+	    {% endfor %}
+	  </ul>
+	</div>
+	{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock container %}
+  
+{% block custom_script %}
+{% endblock custom_script %}
+

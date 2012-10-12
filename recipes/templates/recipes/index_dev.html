@@ -1,0 +1,102 @@
+{% extends "base_bs.html" %}
+
+{% block container %}
+{% regroup recipe_list by first_letter as index_list %}
+<div class="row">
+  <div class="span4 offset4">
+    <h1 style="padding-top:60px;margin-top:-60px" id="top">
+      Index
+    </h1>
+  </div>
+</div>
+<div class="row">
+  <div class="span2 offset2" id="letters_div" style="min-height:1px;"> 
+    <div data-spy="affix" data-offset-top="200px">
+      <div class="well" style="text-align:center">
+	{% for letter in index_list %}
+	<span style="width:1em;display:inline-block;"><a href="#idx-{{letter.grouper}}"><strong>{{letter.grouper}}</strong></a></span> 
+	{% if forloop.counter|divisibleby:"5" %}
+	<br />
+	{% endif %}
+	{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="span4" id="contents_div">
+    <div class="row">
+      <ul class="unstyled" style="line-height:2">
+	{% for letter in index_list %}
+	<li id="idx-{{letter.grouper}}" style="padding-top:40px;margin-top:-40px;"> 
+	  <h4>
+	    <div class="pull-right">
+	      <a href="#top">
+		<i class="icon-arrow-up"></i>
+	      </a>
+	    </div>
+	    {{letter.grouper}}
+	    {% comment %}
+	    <button class="btn btn-small" data-toggle="collapse" data-target="#{{dish.grouper|slugify}}-contents"><i class="icon-chevron-down"></i></button> {{ dish.grouper }}
+	    {% endcomment %}
+	  </h4>
+	</li>
+	<div>
+	  <ul>
+	    {% for recipe in letter.list %}
+	    <li class="indiv_recipe {% if user.is_authenticated and recipe in user.get_profile.fav_recipes.all %}favorite{% endif %}"><a id="{{ recipe.slug }}" href="{% url recipe_detail recipe.slug %}">{{recipe}}</a></li>
+	    {% endfor %}
+	  </ul>
+	</div>
+	{% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock container %}
+  
+{% block custom_script %}
+<script>
+    $(document).ready(function() {
+	var method_type = "DELETE";
+	$.ajaxSetup({
+	    crossDomain: false,
+	    beforeSend: function(xhr, settings) {
+		if (/^(POST|PUT|DELETE)$/.test(settings.type)) {
+		    xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
+		}
+	    }
+	});
+	{% if user.is_authenticated %}
+	$(".indiv_recipe").hover(
+	    function() {
+		var bookmark_icon = '<i class="icon-bookmark-empty"></i>';
+		method_type = "PUT";
+		if ($(this).hasClass("favorite")) {
+		    bookmark_icon = '<i class="icon-bookmark"></i>';
+		    method_type = "DELETE";
+		};
+		$(this).append(bookmark_icon);
+	    },
+	    function() {
+		$(this).find('i').remove();
+	    }
+	);
+	{% endif %}
+	$("#contents_div").on("click",".icon-bookmark-empty,.icon-bookmark",function(event) {
+	    var selected_li = $(this).parent();
+	    var obj_slug = $(this).prev().attr("id");
+	    var cur_icn = $(this);
+	    alert(obj_slug + " " + method_type);
+	    $.ajax({
+	    	type: method_type,
+	    	data: { key: "val" },
+	    	url: "/recipes/fav/" + obj_slug + "/"
+	    }).done(function() {
+		cur_icn.toggleClass("icon-bookmark icon-bookmark-empty");
+		selected_li.toggleClass("favorite");
+	    });
+	    
+	});
+    });
+</script>
+{% endblock custom_script %}
+

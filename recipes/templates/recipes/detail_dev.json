@@ -1,0 +1,104 @@
+{% load comments %}
+{
+    "name":"{{ object.name }}",
+    "href":"{{ object.get_absolute_url }}",
+    {% if user.is_authenticated %}
+    "favorite":{% if object in user.get_profile.fav_recipes.all %}true{% else %}false{% endif %},
+    {% endif %}
+    "from":"{{object.origin}}",
+    "ingredients":[
+	{% for ingredient in object.recipeingredient_set.all %}
+	"{{ ingredient }}"{% if not forloop.last %},{% endif %}
+	{% endfor %}
+    ]
+    "instructions":[
+	{% for instruction in object.instructionstep_set.all %}
+	"{{ instruction }}"{% if not forloop.last %},{% endif %}
+	{% endfor %}
+    ],
+    "nutrition":{
+	{% with nut_info=object.nutrition %}
+	"servings": "{{object.servings}}",
+	"serving size": "{{ nut_info.weight }}g",
+	"calories": "{{ nut_info.calories }}",
+	"carbohydrate": "{{ nut_info.carbohydrate }}g"
+	"protein": "{{ nut_info.protein }}g"
+	"fat": "{{ nut_info.fat }}"
+	{#"errors": "{{ nut_info.errors }}"#}
+	{% endwith %}
+    }{% if object.foodpicture_set.all %},
+    "images":[
+	{% for picture in object.foodpicture_set.all %} {
+	"src": "{{ picture.img_address }}",
+	"href": "{{ picture.link_address }}" }{% if not forloop.last %},{% endif %}
+	{% endfor %}
+    ]
+    {% endif %}
+}
+{% comment %}
+    <div class="row">
+      <hr />
+      <div class="span5">
+      <h4>Comments:</h4>
+      {% get_comment_list for object as comment_list %}
+      {% for comment in comment_list %}
+      {% with comment.user as commenter %}
+      <div class="well">
+	<p>
+	  {{ comment.comment }}
+	</p>
+	<p class="pull-right">
+	  {% if commenter.first_name %}
+          {{commenter.first_name}} {{commenter.last_name}}, 
+	  {% else %}
+          {{commenter.username}}, 
+	  {% endif %}
+	  <em>{{comment.submit_date|date:"M j, Y"}}</em>
+	</p>
+      </div>
+      {% endwith %}
+      {% empty %}
+      <p>
+	No comments yet.  Be the first to add one!
+      </p>
+      {% endfor %}
+      </div>
+      {% if user.is_authenticated %}
+      <div class="span3">
+      {% get_comment_form for object as form %}
+      <form action="{% comment_form_target %}" method="post">
+	<legend>Add a Comment</legend>
+	{% csrf_token %}
+	{% for field in form %}
+	{% if field.is_hidden %}
+	<div>{{ field }}</div>
+	{% elif field.name in "nameemailurl" %}
+	<div style="display:none">
+	  {{ field }}
+	</div>
+	{% else %}
+	{% if field.errors %}{{ field.errors }}{% endif %}
+	<p
+           {% if field.errors %} class="error"{% endif %}
+           {% ifequal field.name "honeypot" %} style="display:none;"{% endifequal %}>
+          {{ field.label_tag }} {{ field }}
+	</p>
+	{% endif %}
+	{% endfor %}
+
+
+	<input type="hidden" name="next" value="{{ request.get_full_path }}" />        
+	<button class="btn btn-primary" type="submit" name="submit" value="Post">Post</button>
+        <button class="btn" type="submit" name="preview" value="Preview">Preview</button>
+      </form>
+      </div>
+      {% else %}
+      Only registered users may comment. <a href="/accounts/login/" class="btn btn-primary" style="margin-top:1em;">Login</a> or <a href="/accounts/register/" class="btn btn-success" style="margin-top:1em;">Register</a>
+      {% endif %}
+    </div>
+  </div>
+  
+</div>
+{% endblock container %}
+
+{% endcomment %}

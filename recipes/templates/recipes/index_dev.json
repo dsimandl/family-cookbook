@@ -1,0 +1,14 @@
+{
+    "links":[
+	"self":"{{ request.build_absolute_uri }}"
+    ],
+    "objects:"[
+	{% for recipe in recipe_list %}
+	{
+	    "name":"{{ recipe }}",
+	    "href":"http://{{ request.get_host }}{{ recipe.get_absolute_url }}"
+	}
+	{% endfor %}
+    ]
+}
+

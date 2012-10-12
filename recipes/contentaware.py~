@@ -1,0 +1,42 @@
+from django.views.generic.base import *
+from django.views.generic.detail import *
+from django.views.generic.list import *
+
+class AwareSingleObjectTemplateResponseMixin(SingleObjectTemplateResponseMixin):
+    def get_template_names(self):
+        names = super(AwareSingleObjectTemplateResponseMixin,self).get_template_names()
+        format = self.kwargs.get('format','html')
+        if format != 'html':
+            names = [n[:-4]+format for n in names]
+        return names
+
+    def render_to_response(self,context):
+        response = super(AwareSingleObjectTemplateResponseMixin,self).render_to_response(context)
+        format = self.kwargs.get('format','html')
+        if format == 'json':
+            response['content-type'] = 'application/json'
+        return response
+
+class AwareDetailView(AwareSingleObjectTemplateResponseMixin,BaseDetailView):
+    """Renders a content-aware view of an object, depending on the "format" parameter in the
+    view's kwargs"""
+
+class AwareMultipleObjectTemplateResponseMixin(MultipleObjectTemplateResponseMixin):
+    def get_template_names(self):
+        names = super(AwareMultipleObjectTemplateResponseMixin,self).get_template_names()
+        format = self.kwargs.get('format','html')
+        if format != 'html':
+            names = [n[:-4]+format for n in names]
+        return names
+
+    def render_to_response(self,context):
+        response = super(AwareMultipleObjectTemplateResponseMixin,self).render_to_response(context)
+        format = self.kwargs.get('format','html')
+        if format == 'json':
+            response['content-type'] = 'application/json'
+        return response
+    
+
+class AwareListView(AwareMultipleObjectTemplateResponseMixin,BaseListView):
+    """Renders a content-aware view of a list of objects, depending on the "format" parameter
+    in the view's kwargs"""

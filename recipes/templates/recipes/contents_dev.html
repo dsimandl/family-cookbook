@@ -1,0 +1,121 @@
+{% extends "base_bs.html" %}
+
+{% block container %}
+{% regroup recipe_list by get_dish_display as contents_list %}
+<div class="row">
+  <div class="span4 offset4">
+    <h1 style="padding-top:60px;margin-top:-60px" id="top">
+      {% if fav_user %} 
+        {% if fav_user == user %} 
+        My 
+        {% else %}
+          {% if fav_user.first_name %}
+          {{fav_user.first_name}}'s
+          {% else %}
+          {{ fav_user.username}}'s
+          {% endif %}
+        {% endif %}
+        Favorites
+      {% else %}
+      Good Food
+      {% endif %}
+    </h1>
+  </div>
+</div>
+<div class="row">
+  <div class="span2 offset2" id="letters_div" style="min-height:1px;">
+    <ul class="nav nav-stacked nav-pills" id="dishnav" data-spy="affix" data-offset-top="100px">
+      {% for dish in contents_list %}
+      <li><a href="#{{dish.grouper|slugify}}-contents"><strong>{{ dish.grouper }}</strong></a></li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="span4" id="contents_div">
+    <ul class="unstyled" style="line-height:2">
+      {% for dish in contents_list %}
+      <li id="{{dish.grouper|slugify}}-contents" style="padding-top:40px;margin-top:-40px;"> 
+	<h4>
+	    <div class="pull-right">
+	      <a href="#top">
+		<i class="icon-arrow-up"></i>
+	      </a>
+	    </div>
+	  {{ dish.grouper }}
+	</h4>
+	<ul>
+	  {% for recipe in dish.list %}
+	  <li class="indiv_recipe {% if user.is_authenticated and recipe in user.get_profile.fav_recipes.all %}favorite{% endif %}"><a id="{{ recipe.slug }}" href="{% url recipe_detail recipe.slug %}">{{recipe}}</a></li>
+	  {% endfor %}
+	</ul>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock container %}
+
+{% block custom_script %}
+<script>
+    $(document).ready(function() {
+	var method_type = "DELETE";
+	$.ajaxSetup({
+	    crossDomain: false,
+	    beforeSend: function(xhr, settings) {
+		if (/^(POST|PUT|DELETE)$/.test(settings.type)) {
+		    xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
+		}
+	    }
+	});
+	$("body").attr("data-spy","scroll").attr("data-target","#letters_div");
+	// $("#contents_div").on("click",".btn", function() {
+	//     $(this).button('toggle');
+	// });
+	{% if user.is_authenticated and not fav_user == user %}
+	$(".indiv_recipe").hover(
+	    function() {
+		var bookmark_icon = '<i class="icon-bookmark-empty"></i>';
+		method_type = "PUT";
+		if ($(this).hasClass("favorite")) {
+		    bookmark_icon = '<i class="icon-bookmark"></i>';
+		    method_type = "DELETE";
+		};
+		$(this).append(bookmark_icon);
+	    },
+	    function() {
+		$(this).find('i').remove();
+	    }
+	);
+	{% endif %}
+	{% if fav_user and fav_user == user %}
+	$(".indiv_recipe").hover(
+	    function() {
+		$(this).append('<i class="icon-remove-sign"></i>');
+		method_type = "DELETE";
+	    },
+	    function() {
+		$(this).find('i').remove();
+	    }
+	);
+	{% endif %}
+	$("#contents_div").on("click",".icon-remove-sign,.icon-bookmark-empty,.icon-bookmark",function(event) {
+	    var selected_li = $(this).parent();
+	    var obj_slug = $(this).prev().attr("id");
+	    var cur_icn = $(this);
+	    $.ajax({
+	    	type: method_type,
+	    	data: { key: "val" },
+	    	url: "/recipes/fav/" + obj_slug + "/"
+	    }).done(function() {
+		if (cur_icn.hasClass("icon-remove-sign")) {
+		    selected_li.slideUp(function () {$(this).remove()});
+		} else {
+		    cur_icn.toggleClass("icon-bookmark icon-bookmark-empty");
+		    selected_li.toggleClass("favorite");
+		};
+	    });
+	    
+	});
+    });
+</script>
+{% endblock custom_script %}
+
