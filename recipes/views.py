@@ -1,5 +1,6 @@
 from django.http import HttpResponse, QueryDict, HttpResponseRedirect
-from django.views.generic import DetailView, ListView, View, CreateView
+from django.views.generic import DetailView, ListView, View, CreateView, UpdateView
+from django.views.generic.edit import ProcessFormView
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.forms.models import inlineformset_factory
@@ -7,7 +8,7 @@ from django.core import serializers
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate,login, logout
-from models import Recipe, FoodPicture, FoodPictureForm
+from models import *
 from contentaware import *
 
 def home(request):
@@ -63,6 +64,25 @@ class RecipeDetailView(AwareDetailView):
         context['form'] = FoodPictureForm()
         return context
 
+class AuthenticatedProcessFormView(ProcessFormView):
+    def post(self,*args,**kwargs):
+        if self.request.user.is_authenticated():
+            return super(AuthenticatedProcessFormView,self).post(*args,**kwargs)
+        else:
+            return self.get(*args,**kwargs)
+            
+class UserUpdateView(AuthenticatedProcessFormView, UpdateView):
+    model = User
+    slug_field = 'username'
+    form_class = UserForm
+
+    def post(self,*args,**kwargs):
+        if self.request.user == self.get_object():
+            return super(UserUpdateView,self).post(*args,**kwargs)
+        else:
+            return self.get(*args,**kwargs)
+
+
 class PictureAddView(CreateView):
     model = FoodPicture
     form_class = FoodPictureForm
@@ -99,6 +119,7 @@ class PictureAddView(CreateView):
     #         resp.write("Sorry, charlie")
     #         return resp
 
+
 class FavView(View):
 
     def get(self,request,*args,**kwargs):
@@ -125,3 +146,13 @@ class FavView(View):
         else:
             resp.write("no luck this time")
         return resp
+
+class PersonaLoginView(View):
+
+    def post(self,request,*args,**kwargs):
+        user = authenticate(assertion=request.POST.get('assertion'))
+        if user is not None:
+            login(request,user)
+            print("persona login", user, user.is_authenticated())
+
+        return HttpResponse(user.username)

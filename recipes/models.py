@@ -264,7 +264,6 @@ class NutritionUnit(models.Model):
     unit = models.CharField(max_length = 4, choices=UNIT_CHOICES)
     weight = models.DecimalField(max_digits=9,decimal_places=2)
 
-
     def __unicode__(self):
         return str(self.amount) + " " + self.unit + " " + str(self.ingredient)
 
@@ -274,6 +273,12 @@ class UserProfile(models.Model):
 
     def __unicode__(self):
         return "Profile for " + self.user.username
+
+class UserForm(ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name','last_name','email']
+    
 
 def create_user_profile(sender,instance,created,**kwargs):
     if created:
