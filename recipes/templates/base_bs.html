@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Family Recipes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    
+    <!-- Le styles -->
+    <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/fontawesome/font-awesome.css" rel="stylesheet">
+    <link href="/static/css/persona-buttons.css" rel="stylesheet">
+    <style>
+      body {
+      background-image:url('/static/handmadepaper.png');
+      }
+      @media (min-width: 981px) {
+      body {
+      padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */ 
+      padding-bottom: 60px;
+      }
+      }
+      @media (max-width: 767px) {
+	  #letters_div .affix {
+	      position: static;
+	      width: auto;
+	      top: 0;
+	  }
+      }
+    </style>
+    <!-- <link href="/static/bootstrap/css/bootstrap-responsive.css" rel="stylesheet"> -->
+    
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+	<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
+    
+    <!-- Le fav and touch icons -->
+{#    <link rel="shortcut icon" href="../assets/ico/favicon.ico">#}
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+  </head>
+
+  <body  data-spy="scroll" data-target="#letters_div" data-offset="75">
+
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="/">Recipes</a>
+	  <ul class="nav pull-right">
+	    <li class="dropdown">
+	      {% if user.is_authenticated %}
+	      <a href=""
+		 class="dropdown-toggle"
+		 data-toggle="dropdown"
+		 data-target="#">
+		<i class="icon-user"></i> {{ user.username }}<b class="caret"></b>
+	      </a>
+	      <ul class="dropdown-menu">
+		<li>
+		  <a href="{% url user_recipes user.username %}">
+		    My Favorites
+		  </a>
+		</li>
+		<li>
+		  <a href="/admin/recipes/recipe/add/">
+		    Add New Recipes
+		  </a>
+		</li>
+		<li>
+		  <a href="/users/{{ user.username }}/">
+		    Edit My Profile
+		  </a>
+		</li>
+{% comment %}
+		<li>
+		  <a href="/logout/?next={{request.get_full_path}}">
+		    Log Out
+		  </a>
+		</li>
+{% endcomment %}
+		<li>
+		  <a id="persona_logout" href="#">Logout</a>
+		</li>
+	      </ul>
+	      {% else %}
+	      <a href="#" id="persona_login">
+                <img src="{{ STATIC_URL }}img/email_sign_in_black.png" />
+	      </a>
+{% comment %}
+	      <ul class="dropdown-menu unstyled">
+		<li>
+		  <form action="/login/" method="post">
+		    {% csrf_token %}
+		    <input type="hidden" name="next" value="{{request.get_full_path}}" />
+		    <input type="text" 
+			   name="username"
+			   placeholder="User name"
+			     style="margin-left:1em;margin-right:1em"/>
+		    <br />
+		    <input type="password" 
+			   name="password"
+			   placeholder="Password"
+			   style="margin-left:1em;margin-right:1em"/>
+		    <br />
+		    <button class="btn btn-primary" type="submit" value="Login" style="margin-left:1em">
+		      Login
+		    </button>
+		  </form>
+		</li>
+		<li>
+		  <a href="/accounts/register/" class="btn" style="width:4em;margin-left:1em">
+		    Register
+		  </a>
+		</li>
+		<li>
+		  <button class="btn" id="persona_login">Login or Register</button>
+		</li>
+	      </ul>
+{% endcomment %}
+	      {% endif %}
+	    </li>
+	  </ul>
+          <div class="nav-collapse">
+	    <form class="navbar-search pull-right">
+	      <input type="text" 
+		     class="search-query typeahead" 
+		     name="search"
+		     id="search_box"
+		     placeholder="Search" />
+	    </form>
+            <ul class="nav">
+              <!-- <li class="active"><a href="#">Home</a></li> -->
+	      <li>
+		<a href="{% url recipe_contents %}">Contents</a>
+	      </li>
+	      <li>
+		<a href="{% url recipe_index %}">Index</a>
+	      </li>
+	      <li class="dropdown visible-desktop">
+		<a href="" 
+		   class="dropdown-toggle"
+		   data-toggle="dropdown"
+		   data-target="#">Categories<b class="caret"></b>
+		</a>
+	      {% regroup master_recipe_list by get_dish_display as contents_list %}
+		<ul class="dropdown-menu">
+		  {% for dish in contents_list %}
+		  <li class="dropdown-submenu">
+		    <a href="/recipes/contents/#{{dish.grouper|slugify}}-contents">
+		      {{dish.grouper}}
+		    </a>
+		    <ul class="dropdown-menu" style="max-height:30em;overflow-y:auto">
+		      {% for recipe in dish.list %}
+		      <li>
+			<a href="{% url recipe_detail recipe.slug %}">
+			  {{recipe.name}}
+			</a>
+		      </li>
+		      {% endfor %}
+		    </ul>
+		    {% endfor %}
+		  </li>
+		</ul>
+	      </li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+{% block container %}
+{% endblock container %}
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="/static/jqueryui/js/jquery-1.8.0.min.js"></script>
+    <script src="/static/bootstrap/js/bootstrap.min.js"></script>
+    <script src="https://login.persona.org/include.js"></script>
+    <script>
+
+    var names=[];
+    var slugs=[];
+
+
+var currentUser = null;
+{% if user.is_authenticated %}
+currentUser = "{{ user.username }}";
+{% endif %}
+
+navigator.id.watch({
+    loggedInUser: currentUser,
+    onlogin: function(assertion) {
+	$.ajaxSetup({
+	    crossDomain: false,
+	    beforeSend: function(xhr, settings) {
+		if (/^(POST|PUT|DELETE)$/.test(settings.type)) {
+		    xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
+		}
+	    }
+	});
+	$.ajax({ /* <-- This example uses jQuery, but you can use whatever you'd like */
+	    type: 'POST',
+	    url: '/persona/login/', // This is a URL on your website.
+	    data: {assertion: assertion},
+	    success: function(res, status, xhr) { window.location.reload() },
+	    error: function(xhr, status, err) { alert("Login failure: " + err); }
+	});
+    },
+    onlogout: function() {
+	$.ajaxSetup({
+	    crossDomain: false,
+	    beforeSend: function(xhr, settings) {
+		if (/^(POST|PUT|DELETE)$/.test(settings.type)) {
+		    xhr.setRequestHeader("X-CSRFToken", "{{csrf_token}}");
+		}
+	    }
+	});
+	$.ajax({
+	    type: 'POST',
+	    url: '/logout/', // This is a URL on your website.
+	    success: function(res, status, xhr) { window.location.reload(); },
+	    error: function(xhr, status, err) { alert("Logout failure: " + err); }
+	});
+    }
+});
+{% for r in master_recipe_list %}
+names.push($('<div>'+"{{ r.name }}"+'</div>').html());
+slugs.push("{{r.slug}}");
+{% endfor %}
+$(document).ready(function() {
+    var signinLink = document.getElementById('persona_login');
+    if (signinLink) {
+	signinLink.onclick = function() { navigator.id.request(); };
+    }
+    
+    var signoutLink = document.getElementById('persona_logout');
+    if (signoutLink) {
+	signoutLink.onclick = function() { navigator.id.logout(); };
+    }
+    $(".typeahead").typeahead({
+        items:6, 
+        source: names,
+	//function(query) {
+	//                    return names.concat([query]);
+	//                  },
+        sorter: function(items) {
+            items.sort();
+            return [this.query].concat(items);
+        } 
+    });
+    $("#search_box").on("change", function() {
+        var slug = $(this).val();
+        if (names.indexOf(slug) == -1) {
+            window.location = "{% url recipe_search %}?term=" + encodeURI(slug);
+        } else {
+	    slug = slugs[names.indexOf(slug)];
+            window.location = "/recipes/" + slug + "/";
+        };
+    });
+});
+</script>
+{% block custom_script %}    
+{% endblock custom_script %}
+</body>
+</html>

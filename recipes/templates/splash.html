@@ -1,0 +1,80 @@
+{% extends "base_bs.html" %}
+
+{% block container %}
+
+<div class="row">
+  <div class="span8 offset2">
+    <div class="hero-unit" style="text-align:center">
+      <h1>Family Favorites</h1>
+    </div>
+    <div style="text-align:center;">
+      <h2>Get Started!</h2>
+      <h3><a href="{% url recipe_contents %}">Table of Contents</a></h3>
+      <h3><a href="{% url recipe_index %}">Index</a></h3>
+{% comment %}
+      {% if not user.is_authenticated %}
+      <h3><a href="{% url persona_login %}" class="persona-button dark persona_login_main"><span>Sign in with your Email</span></a></h3>
+{#      <h3><a href="/accounts/login">Log In</a> or <a href="/accounts/register">Register</a></h3> #}
+      
+      {% endif %}
+{% endcomment %}
+    </div>
+    <div>
+      <h2>History</h2>
+      <p>
+	When we started to make plans to be on the road for most of 2012, Jenny said she would be particularly sad not to have the cookbooks that contained her favorite recipes. I decide that I could do something about that, and started to work on a project that would allow us to keep them in the cloud, always accessible wherever we had an internet connection.  As the project began to take shape, we knew that we wanted to share it with our family members and friends.  We hope you find it useful.  If you register, you can bookmark your favorites, make comments, and add new recipes.
+      </p>
+      <p>
+	One Christmas when I was a boy, I promised my mother that I would put all of her favorite recipes on the computer.  I'm not sure what good I thought that would do--the computer wasn't even close to the kitchen!  I also didn't really know how I could make a computerized cookbook any better than a box full of index cards.  The project never really got off the ground, and I don't think I got my mother a gift to fulfill that broken promise.  In today's world of wireless internet, where we all have smartphones and tablets, an online cookbook makes a lot more sense.  Mom, I hope this cookbook looks good on your iPad!
+      </p>
+      <p>
+	In early 2011, my brother John invited everyone to contribute to a recipe collection that he and Emily had started in Google Docs.  We appreciate the efforts of those who contributed to that effort; it contains lots of wonderful dishes.  Thanks to Jenny's diligent and painstaking efforts those recipes have been transcribed into this collection, which should be easier to navigate, search and personalize.
+      </p>
+    </div>
+    <div>
+      <h2>FAQ</h2>
+      <h5>What does "Sign in with your Email" mean?</h5>
+      <p>
+	This website uses Mozilla Persona, which makes it possible for you to use your email address and a single password to sign in securely to many different websites.  The sign up process is quick and easy--you choose a password, verify your email, and log in.  Eventually, Persona will be built into your web browser.
+      </p>
+      <h5>Why should I sign in?</h5>
+      <p>
+	By signing in, you'll be able to bookmark your favorites (just click on the <i class="icon-bookmark-empty"></i>), make comments, link to pictures, and (soon) add new recipes.
+      </p>
+      <h5>How do I add a picture?</h5>
+      <p>
+	Right now, your picture must already be uploaded to a photo-sharing site like <a href="http://www.flickr.com">flickr</a>, <a href="http://picasaweb.google.com">Picasa</a>, or <a href="http://imgur.com">imgur</a>.  Copy the the direct link to the image and paste it into the "image URL" field of the picture form on the recipe page.  If you can't find a direct link, right-click on the picture itself and select "copy image location."  Some sites, including flickr, reqire a link back any time an image on their site is displayed on a different page; copy and paste this to the "Link" field of the picture form.
+      </p>
+      <h5>Can I search by ingredient?</h5>
+      <p>
+	The search field will auto-complete with the title of any recipe that matches what's been entered so far.  If none of those match what you're looking for, selecting the first option or pressing <em>Return</em> will find recipes that have a title or ingredient matching the search term.
+      </p>
+    </div>
+    <div>
+      <h2>Colophon</h2>
+      <ul>
+	<li>Backend: <a href="http://www.djangoproject.com">Django</a></li>
+	<li>Design: <a href="http://twitter.github.com/bootstrap">Twitter Bootstratp</a></li>
+	<li>Background: <a href="http://subtlepatterns.com">Subtle Patterns</a></li>
+	<li>Hosting: <a href="http://www.dotcloud.com">dotCloud</a></li>
+	<li>Email Relay: <a href="http://www.mailgun.com">Mailgun</a></li>
+	<li>Authentication: <a href="http://www.mozilla.org/en-US/persona/">Mozilla Persona</a></li>
+	<li>Nutrition Information: <a href="http://ndb.nal.usda.gov">USDA National Nutrient Database</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+{% endblock container %}
+
+{% block custom_script %}
+{% comment %}
+$(document).ready(function() {
+    var signinLink2 = document.getElementById('persona_login_main');
+    if (signinLink2) {
+	signinLink.onclick = function() { navigator.id.request(); };
+    }
+});
+{% endcomment %}
+{% endblock custom_script %}
+
