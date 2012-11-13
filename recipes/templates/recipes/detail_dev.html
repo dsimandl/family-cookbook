@@ -1,22 +1,35 @@
 {% extends "base_bs.html" %}
 {% load comments %}
+{% load persona_name %}
 
 {% block container %}
 <div class="row">
   <div class="span6 offset3">
     <h1>
-      {{ object.name }}
     {% if user.is_authenticated %}
     <span class="pull-right" id="outer_bookmark">
-    {% if object in user.get_profile.fav_recipes.all %}
-      <i class="icon-bookmark" id="bookmark"></i>
-    {% else %}
-      <i class="icon-bookmark-empty" id="bookmark"></i>
-    {% endif %}
+      {% if object in user.get_profile.fav_recipes.all %}
+	<i class="icon-bookmark" id="bookmark"></i>
+	{% else %}
+	<i class="icon-bookmark-empty" id="bookmark"></i>
+	{% endif %}
     </span>
     {% endif %}
+      {{ object.name }}
     </h1>
-    <h5>From <em>{{object.origin}}</em></h5>
+    <h5>
+      {% if perms.recipes.add_recipe %}
+      <span class="pull-right">
+	<a href="/admin/recipes/recipe/{{object.id}}/"><i class="icon-edit"></i></a>
+      </span>
+      {% endif %}
+      From <em>{{object.origin}}</em>
+    </h5>
+  </div>
+  <div class="span2 social">
+    <span id="pin_it">
+      <a href="http://pinterest.com/pin/create/button/?url={{ request.get_host|urlencode}}/{{ object.build_absolute_uri|urlencode }}&media={% if object.foodpicture_set.all %}{{ object.foodpicture_set.all.0.img_address|urlencode }}{% else %}http%3A%2F%2Ffarm9.staticflickr.com%2F8054%2F8112928661_489e902962.jpg{% endif %}&description={{ object.name|urlencode }}%20from%20Family%20Recipes" class="pin-it-button" count-layout="horizontal"><img border="0" src="//assets.pinterest.com/images/PinExt.png" title="Pin It" /></a>
+    </span>
   </div>
 </div>
 
@@ -26,19 +39,48 @@
     <div class="row">
       <div class="span3">
 	<h3>Ingredients:</h3>
-	<ul style="padding:0px;margin:0px;list-style-position:inside;">
+	<ul style="padding:0px;margin:0px;list-style-position:inside;" id="ing-list">
 	  {% for ingredient in object.recipeingredient_set.all %}
-	  <li> {{ ingredient }} </li>
+	  <li data-ing="{{ ingredient.ingredient.name }}"
+	      data-amt="{{ ingredient.amount }}"
+	      data-unit="{{ ingredient.unit }}">
+            {{ ingredient }}
+          </li>
 	  {% endfor %}
 	</ul>
       </div>
-      <div class="span5">
-	<h3>Directions:</h3>
-	<ol style="padding:0px;margin:0px">
+      <div class="span5" id="directions">
+	<h3>
+	  <button class="btn btn-mini pull-right" id="change-view">Change View</button> 
+	  Directions:
+	</h3>
+	<div id="traditional">
+	  <ol style="padding:0px;margin:0px" >
+	    {% for instruction in object.instructionstep_set.all %}
+	    <li> {{ instruction }}</li>
+	    {% endfor %}
+	  </ol>
+	</div>
+	<div id="one-by-one" style="display:none">
+	  <ul class="nav nav-tabs">
 	  {% for instruction in object.instructionstep_set.all %}
-	  <li> {{ instruction }}</li>
+	  <li {% if forloop.first %}class="active"{% endif %}>
+	    <a href="#step-{{ forloop.counter }}"
+	       data-toggle="tab">
+	      Step {{ forloop.counter }}
+	    </a>
+	  </li>	  
 	  {% endfor %}
-	</ol>
+	  </ul>
+	  <div class="tab-content">
+	    {% for instruction in object.instructionstep_set.all %}
+	    <div class="tab-pane{% if forloop.first %} active{% endif %}"
+		 id="step-{{ forloop.counter }}">
+	      <p class="lead">{{ instruction }}</p>
+	    </div>
+	    {% endfor %}
+	  </div>
+	</div>
       </div>
     </div>
 
@@ -91,10 +133,9 @@
       {% endif %}
       {% if user.is_authenticated %}
       <div>
-	<h5 data-toggle="collapse" 
-	    data-target="#picture-form">
+	<button class="btn btn-small" data-toggle="collapse" data-target="#picture-form">
 	  <i class="icon-plus-sign"></i> Add a Picture
-	</h5>
+	</button>
 	<div id="picture-form" class="collapse">
 	  <form action="picture/" method="POST">
 	    {% csrf_token %}
@@ -122,10 +163,10 @@
 	  {{ comment.comment }}
 	</p>
 	<p class="pull-right">
-	  {% if commenter.first_name %}
+	  {% if commenter.first_name or commenter.last_name %}
           {{commenter.first_name}} {{commenter.last_name}}, 
 	  {% else %}
-          {{commenter.username}}, 
+          {{commenter.username|shortname}}, 
 	  {% endif %}
 	  <em>{{comment.submit_date|date:"M j, Y"}}</em>
 	</p>
@@ -167,7 +208,11 @@
       </form>
       </div>
       {% else %}
-      Only registered users may comment. <a href="/accounts/login/" class="btn btn-primary" style="margin-top:1em;">Login</a> or <a href="/accounts/register/" class="btn btn-success" style="margin-top:1em;">Register</a>
+      Only registered users may comment.  
+      <br />
+      <a href="#" id="persona_login_sub">
+        <img src="{{ STATIC_URL }}img/email_sign_in_black.png" />
+      </a>
       {% endif %}
     </div>
   </div>
@@ -186,6 +231,9 @@ $(document).ready(function() {
         }
     }
   });
+  $("#persona_login_sub").on("click", function() {
+    $("#persona_login").trigger("click");
+  });
   $("#outer_bookmark").on("click",function(event) {
     var method_type = "PUT";
     var cur_icn = $(this).children("i").first();
@@ -201,6 +249,37 @@ $(document).ready(function() {
     });
 
   });
+  $("#change-view").on('click', function(event) {
+      $("#directions").children("div").slideToggle( function() {
+	  if (!$("#one-by-one").is(":hidden")) {
+	      var first_text = $("#one-by-one .tab-content .active").text();
+	      highlight_ings(first_text);
+	  } else {
+	      highlight_ings('');
+	  };
+      });
+  });
+
+  var highlight_ings = function(text) {
+      var ing_list = $("#ing-list");
+      $('strong',ing_list).contents().unwrap();
+      $('em',ing_list).contents().unwrap();
+      ing_list.children().each(function(idx, elt) {
+	  var ing_list = $(elt).data('ing').split(/[^\w]+/);
+	  for (var i=0, len=ing_list.length; i < len; i++) {
+	      if (text.search(ing_list[i]) > 0) {
+		  $(this).wrapInner("<strong />").wrapInner("<em />");
+		  break;
+	      };
+	  };
+      });
+  };
+
+  $('a[data-toggle="tab"]').on('shown',function(event) {
+      var step_text = $($(event.target).attr("href")).text();
+      highlight_ings(step_text);
+  });
 });
 </script>
+<script type="text/javascript" src="//assets.pinterest.com/js/pinit.js"></script>
 {% endblock custom_script %}

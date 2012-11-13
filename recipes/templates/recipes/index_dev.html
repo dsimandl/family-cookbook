@@ -20,6 +20,13 @@
 	{% endif %}
 	{% endfor %}
       </div>
+      {% if user.is_authenticated %}
+      <button class="btn btn-mini" 
+	      id="bkmark_btn" 
+	      data-on="false">
+	Show Bookmarks
+      </button>
+      {% endif %}
     </div>
   </div>
   <div class="span4" id="contents_div">
@@ -56,7 +63,6 @@
 {% block custom_script %}
 <script>
     $(document).ready(function() {
-	var method_type = "DELETE";
 	$.ajaxSetup({
 	    crossDomain: false,
 	    beforeSend: function(xhr, settings) {
@@ -65,27 +71,33 @@
 		}
 	    }
 	});
-	{% if user.is_authenticated %}
-	$(".indiv_recipe").hover(
-	    function() {
-		var bookmark_icon = '<i class="icon-bookmark-empty"></i>';
-		method_type = "PUT";
-		if ($(this).hasClass("favorite")) {
-		    bookmark_icon = '<i class="icon-bookmark"></i>';
-		    method_type = "DELETE";
+	$("#bkmark_btn").on("click",function(event) {
+	    var on_status = $(this).data('on');
+	    $(this).data('on',!on_status);
+	    $(".indiv_recipe").each(function() {
+		if (!on_status) {
+		    var bookmark_icon = '<i class="icon-bookmark-empty"></i>';
+		    if ($(this).hasClass("favorite")) {
+			bookmark_icon = '<i class="icon-bookmark"></i>';
+		    };
+		    $(this).prepend(bookmark_icon);
+		} else {
+		    $(this).children('i').remove();
 		};
-		$(this).append(bookmark_icon);
-	    },
-	    function() {
-		$(this).find('i').remove();
-	    }
-	);
-	{% endif %}
+	    });
+	    if (on_status) {
+		$(this).html("Show Bookmarks");
+	    } else {
+		$(this).html("Hide Bookmarks");
+	    };
+	});
+
 	$("#contents_div").on("click",".icon-bookmark-empty,.icon-bookmark",function(event) {
 	    var selected_li = $(this).parent();
-	    var obj_slug = $(this).prev().attr("id");
+	    var obj_slug = $(this).next().attr("id");
 	    var cur_icn = $(this);
-	    alert(obj_slug + " " + method_type);
+	    var method_type = "PUT";
+	    if (selected_li.hasClass("favorite")) method_type = "DELETE";
 	    $.ajax({
 	    	type: method_type,
 	    	data: { key: "val" },
